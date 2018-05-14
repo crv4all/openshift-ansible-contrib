@@ -3,12 +3,10 @@
 - hosts: nodes
   gather_facts: yes
   become: yes
-  tasks:
-  - debug: var=openshift_is_atomic
   roles:
   - rhsm-timeout
   - role: atomic-update
-    when: openshift_is_atomic |bool
+    when: openshift.common.is_atomic
 
 - hosts: nodes
   gather_facts: no
