@@ -14,7 +14,7 @@ host_up_time: 80
 
 openshift_is_atomic: false
 openshift_is_containerized: false
-openshift.common.is_atomic: false
+openshift_is_atomic: false
 
 # OpenShift variables
 openshift_registry_selector: "role=infra"
