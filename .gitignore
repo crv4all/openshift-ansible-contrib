@@ -19,6 +19,7 @@ multi_inventory.yaml
 .vagrant
 .tags*
 *.ini
+*.orig
 *ocp-installer
 add-node.json
 infrastructure.json

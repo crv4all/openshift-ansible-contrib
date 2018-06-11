@@ -1,8 +1,9 @@
 ---
-- name: Install python-ipaddress
-  yum:
-    name: python-ipaddress
-    state: installed
+#Commenbed out since new version might not needed it, we will see
+#- name: Install python-ipaddress
+#  yum:
+#    name: python-ipaddress
+#    state: installed
 
 - name: Gather facts
   openshift_facts:
@@ -15,7 +16,7 @@
     owner: root
     group: root
     mode: 0644
-  when: not openshift_is_atomic | bool and ansible_distribution != 'CentOS'
+  when: not openshift.common.is_atomic | bool and ansible_distribution != 'CentOS'
 
 - name: create the docker-storage-setup config file
   template:
@@ -24,5 +25,4 @@
     owner: root
     group: root
     mode: 0644
-  when: ansible_distribution == 'CentOS' and not openshift_is_atomic | bool
-
+  when: ansible_distribution == 'CentOS' and not openshift.common.is_atomic | bool
