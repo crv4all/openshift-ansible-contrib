@@ -11,6 +11,7 @@ data_center_name: Default
 # VM infra
 ##########################
 template_cluster: "{{ rhv_cluster }}"
+template_name: centos7
 template_memory: 8GiB
 template_cpu: 1
 template_disk_storage: "{{ rhv_data_storage }}"
@@ -74,23 +75,6 @@ node_vm:
 #    - sed -i 's@com.redhat.rhevm.vdsm@ovirt-guest-agent.0@' /etc/udev/rules.d/55-ovirt-guest-agent.rules
 #    - 'udevadm trigger --subsystem-match="virtio-ports"'
 
-cloud_init_script_node: |
-  runcmd:
-    - mkdir -p '/var/lib/origin/openshift.local.volumes'
-    - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
-    - sleep "$(($RANDOM % 60))"
-    - sync
-    - reboot
-  mounts:
-    - [ '/dev/vdc', '/var/lib/origin/openshift.local.volumes', 'xfs', 'defaults,gquota' ]
-  rh_subscription:
-    username: {{vault_rhsub_user}}
-    password: {{vault_rhsub_password}}
-    add-pool: [{{vault_rhsub_pool}}]
-    server-hostname: {{vault_rhsub_server}}
-    enable-repo: ['rhel-7-server-rpms', 'rhel-7-server-extras-rpms', 'rhel-7-fast-datapath-rpms', 'rhel-7-server-ose-3.9-rpms']
-    disable-repo: []
-
 cloud_init_script_master: |
   runcmd:
     - mkdir -p '/var/lib/origin/openshift.local.volumes'
@@ -103,6 +87,22 @@ cloud_init_script_master: |
   mounts:
     - [ '/dev/vdc', '/var/lib/origin/openshift.local.volumes', 'xfs', 'defaults,gquota' ]
     - [ '/dev/vdd', '/var/lib/etcd', 'xfs', 'defaults' ]
+  rh_subscription:
+    username: {{vault_rhsub_user}}
+    password: {{vault_rhsub_password}}
+    add-pool: [{{vault_rhsub_pool}}]
+    server-hostname: {{vault_rhsub_server}}
+    enable-repo: ['rhel-7-server-rpms', 'rhel-7-server-extras-rpms', 'rhel-7-fast-datapath-rpms', 'rhel-7-server-ose-3.9-rpms']
+    disable-repo: []
+cloud_init_script: |
+  runcmd:
+    - mkdir -p '/var/lib/origin/openshift.local.volumes'
+    - /usr/sbin/mkfs.xfs -L localvol /dev/vdc
+    - sleep "$(($RANDOM % 60))"
+    - sync
+    - reboot
+  mounts:
+    - [ '/dev/vdc', '/var/lib/origin/openshift.local.volumes', 'xfs', 'defaults,gquota' ]
   rh_subscription:
     username: {{vault_rhsub_user}}
     password: {{vault_rhsub_password}}
@@ -142,21 +142,21 @@ vms:
     cloud_init:
       host_name: "infra0.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
   - name: "infra1.{{ public_hosted_zone }}"
     tag: openshift_infra
     profile: "{{ node_vm }}"
     cloud_init:
       host_name: "infra1.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
   - name: "infra2.{{ public_hosted_zone }}"
     tag: openshift_infra
     profile: "{{ node_vm }}"
     cloud_init:
       host_name: "infra2.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
 
   # Node VMs
   - name: "app0.{{ public_hosted_zone }}"
@@ -165,21 +165,21 @@ vms:
     cloud_init:
       host_name: "app0.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
   - name: "app1.{{ public_hosted_zone }}"
     tag: openshift_node
     profile: "{{ node_vm }}"
     cloud_init:
       host_name: "app1.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
   - name: "app2.{{ public_hosted_zone }}"
     tag: openshift_node
     profile: "{{ node_vm }}"
     cloud_init:
       host_name: "app2.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
 
   # Load balancer
   - name: "lb.{{ public_hosted_zone }}"
@@ -188,7 +188,7 @@ vms:
     cloud_init:
       host_name: "lb.{{ public_hosted_zone }}"
       authorized_ssh_keys: "{{ root_ssh_key }}"
-      custom_script: "{{ cloud_init_script_node }}"
+      custom_script: "{{ cloud_init_script }}"
 
 affinity_groups:
   - name: masters_ag

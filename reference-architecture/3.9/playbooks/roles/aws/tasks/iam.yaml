@@ -6,7 +6,7 @@
 - name: Create IAM user for cloudprovider_kind
   iam:
     iam_type: user
-    name: "{{ clusterid }}-admin"
+    name: "{{ clusterid }}.{{ dns_domain }}-admin"
     state: present
     access_key_state: create
   register: cpkuser
@@ -18,9 +18,9 @@
 
 - name: Land IAM cloudprovider_kind access key into file
   blockinfile:
-    path: "~/.ssh/config-{{ clusterid }}-cpkuser_access_key"
+    path: "~/.ssh/config-{{ clusterid }}.{{ dns_domain }}-cpkuser_access_key"
     create: yes
-    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    marker: "<!-- {mark} OUTPUT -->"
     content: |
       openshift_cloudprovider_aws_access_key={{ cpkuser.user_meta.access_keys[0].access_key_id }}
       openshift_cloudprovider_aws_secret_key={{ cpkuser.user_meta.access_keys[0].secret_access_key }}
@@ -29,16 +29,15 @@
 - name: Create IAM policy for cloudprovider_kind
   iam_policy:
     iam_type: user
-    iam_name: "{{ cpkuser.user_meta.created_user.user_name }}"
+    iam_name: "{{ clusterid }}.{{ dns_domain }}-admin"
     policy_name: "Admin"
     state: present
-    policy_json: "{{ lookup('template', playbook_dir + '/roles/aws/templates/iam_policy_cpkuser.json.j2', convert_data=False) | string }}"
-  when: cpkuser.changed
+    policy_json: "{{ lookup('template', playbook_dir + '/roles/aws/templates/iam_policy_cpkuser.json.j2') }}"
 
 - name: Create IAM user for Registry S3 storage
   iam:
     iam_type: user
-    name: "{{ clusterid }}-registry"
+    name: "{{ clusterid }}.{{ dns_domain }}-registry"
     state: present
     access_key_state: create
   register: s3user
@@ -50,19 +49,18 @@
 
 - name: Land IAM s3user access key into file
   blockinfile:
-    path: "~/.ssh/config-{{ clusterid }}-s3user_access_key"
+    path: "~/.ssh/config-{{ clusterid }}.{{ dns_domain }}-s3user_access_key"
     create: yes
-    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    marker: "<!-- {mark} OUTPUT -->"
     content: |
       openshift_hosted_registry_storage_s3_accesskey={{ s3user.user_meta.access_keys[0].access_key_id }}
       openshift_hosted_registry_storage_s3_secretkey={{ s3user.user_meta.access_keys[0].secret_access_key }}
   when: s3user.changed
 
-- name: Create IAM policy for OCP Docker Registry AWS S3 bucket
+- name: Create IAM policy for S3 bucket user
   iam_policy:
     iam_type: user
-    iam_name: "{{ s3user.user_meta.created_user.user_name }}"
+    iam_name: "{{ clusterid }}.{{ dns_domain }}-registry"
     policy_name: "S3"
     state: present
-    policy_json: "{{ lookup('template', playbook_dir + '/roles/aws/templates/iam_policy_s3user.json.j2', convert_data=False) | string }}"
-  when: s3user.changed
+    policy_json: "{{ lookup('template', playbook_dir + '/roles/aws/templates/iam_policy_s3user.json.j2') }}"
