@@ -4,7 +4,7 @@
     role: common
 
 - name: use the default project
-  shell: "{{ openshift.common.client_binary }} project default"
+  shell: "oc project default"
 
 - name: Count the infrastructure nodes
   shell: "{{ openshift.common.client_binary }}  get nodes --show-labels | grep role=infra -c"

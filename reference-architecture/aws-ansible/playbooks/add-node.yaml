@@ -10,6 +10,23 @@
   - instance-groups
   - cfn-outputs
 
+- name: Install packages necessary for installer
+  hosts: nodes
+  any_errors_fatal: true
+  tasks:
+  - when:
+    - True | bool
+    block:
+    - name: Ensure openshift-ansible installer package deps are installed
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+      - python-ipaddress
+      when: item != ''
+      register: result
+      until: result is succeeded
+
 - hosts: new_nodes
   gather_facts: yes
   become: yes
